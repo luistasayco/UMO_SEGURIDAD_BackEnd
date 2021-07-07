@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Net.Business.Entities\Net.Business.Entities.csproj" />
+    <ProjectReference Include="..\Net.Connection\Net.Connection.csproj" />
+    <ProjectReference Include="..\Net.CrossCotting\Net.CrossCotting.csproj" />
+  </ItemGroup>
+
+</Project>
