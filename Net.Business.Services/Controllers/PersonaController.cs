@@ -92,15 +92,14 @@ namespace Net.Business.Services.Controllers
                 return BadRequest("Invalid model object");
             }
 
-            int ObjectNew = await _repository.Persona.Create(value.RetornaPersona());
+            var ObjectNew = await _repository.Persona.Create(value.RetornaPersona());
 
-            if (ObjectNew == 0)
+            if (ObjectNew.ResultadoCodigo == -1)
             {
-                ModelState.AddModelError("", $"Algo salio mal guardando el registro {value.Nombre}");
-                return StatusCode(500, ModelState);
+                return BadRequest(ObjectNew);
             }
 
-            return CreatedAtRoute("GetbyIdPersona", new { id = ObjectNew }, ObjectNew);
+            return CreatedAtRoute("GetbyIdPersona", new { id = ObjectNew.IdRegistro }, ObjectNew.IdRegistro);
         }
 
         /// <summary>
@@ -120,7 +119,12 @@ namespace Net.Business.Services.Controllers
                 return BadRequest(ModelState);
             }
 
-            await _repository.Persona.Update(value.RetornaPersona());
+            var response  = await _repository.Persona.Update(value.RetornaPersona());
+
+            if (response.ResultadoCodigo == -1)
+            {
+                return BadRequest(response);
+            }
 
             return NoContent();
         }
@@ -144,7 +148,12 @@ namespace Net.Business.Services.Controllers
                 return BadRequest(ModelState);
             }
 
-            await _repository.Persona.Delete(value.RetornaPersona());
+            var response = await _repository.Persona.Delete(value.RetornaPersona());
+
+            if (response.ResultadoCodigo == -1)
+            {
+                return BadRequest(response);
+            }
 
             return NoContent();
         }

@@ -9,8 +9,8 @@ namespace Net.Data
     {
         Task<IEnumerable<BE_Persona>> GetAll(BE_Persona entidad);
         Task<BE_Persona> GetById(BE_Persona entidad);
-        Task<int> Create(BE_Persona entidad);
-        Task Update(BE_Persona entidad);
-        Task Delete(BE_Persona entidad);
+        Task<BE_ResultadoTransaccion<BE_Persona>> Create(BE_Persona entidad);
+        Task<BE_ResultadoTransaccion<BE_Persona>> Update(BE_Persona entidad);
+        Task<BE_ResultadoTransaccion<BE_Persona>> Delete(BE_Persona entidad);
     }
 }

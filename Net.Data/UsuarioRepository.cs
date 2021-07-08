@@ -38,6 +38,12 @@ namespace Net.Data
             _aplicacionName = this.GetType().Name;
         }
 
+        public UsuarioRepository(IConnectionSQL context)
+            : base(context)
+        {
+            _aplicacionName = this.GetType().Name;
+        }
+
         public Task<IEnumerable<BE_Usuario>> GetAll(BE_Usuario entidad)
         {
             return Task.Run(() => FindAll(entidad, SP_GET));
@@ -55,15 +61,15 @@ namespace Net.Data
         {
             var claveDesEncriptada = EncriptaHelper.DecryptStringAES(entidad.Clave);
 
-            //BE_ResultadoTransaccion<BE_UsuarioAutenticar> resultadoTransaccion = await AutenticarUsuarioDirectorioActivo(entidad.Usuario.ToUpper(), claveDesEncriptada);
-            BE_ResultadoTransaccion<BE_UsuarioAutenticar> resultadoTransaccion = new BE_ResultadoTransaccion<BE_UsuarioAutenticar>();
+            BE_ResultadoTransaccion<BE_UsuarioAutenticar> resultadoTransaccion = await AutenticarUsuarioDirectorioActivo(entidad.Usuario, claveDesEncriptada);
+            //BE_ResultadoTransaccion<BE_UsuarioAutenticar> resultadoTransaccion = new BE_ResultadoTransaccion<BE_UsuarioAutenticar>();
 
             if (resultadoTransaccion.ResultadoCodigo == -1)
             {
                 return resultadoTransaccion;
             }
 
-            BE_Usuario user = VerificarLogin(new BE_Usuario { Usuario = entidad.Usuario.ToUpper() });
+            BE_Usuario user = VerificarLogin(new BE_Usuario { Usuario = entidad.Usuario });
 
             if (user == null)
             {
@@ -111,8 +117,8 @@ namespace Net.Data
 
             BE_ResultadoTransaccion<bool> resultadoTransaccion = new BE_ResultadoTransaccion<bool>();
 
-            //BE_ResultadoTransaccion<BE_UsuarioAutenticar> resultadoTransaccionDirectorio = await AutenticarUsuarioDirectorioActivo(entidad.Usuario.ToUpper(), claveDesEncriptada);
-            BE_ResultadoTransaccion<bool> resultadoTransaccionDirectorio = new BE_ResultadoTransaccion<bool>();
+            BE_ResultadoTransaccion<BE_UsuarioAutenticar> resultadoTransaccionDirectorio = await AutenticarUsuarioDirectorioActivo(entidad.Usuario, claveDesEncriptada);
+            //BE_ResultadoTransaccion<bool> resultadoTransaccionDirectorio = new BE_ResultadoTransaccion<bool>();
 
             if (resultadoTransaccionDirectorio.ResultadoCodigo == -1)
             {
@@ -208,7 +214,7 @@ namespace Net.Data
             vResultadoTransaccion.ResultadoMetodo = _metodoName;
             vResultadoTransaccion.ResultadoAplicacion = _aplicacionName;
 
-            string domainName = "SANFELIPE";
+            string domainName = "ALIADA";
 
             SearchResultCollection results;
 
@@ -318,6 +324,60 @@ namespace Net.Data
                     vResultadoTransaccion.ResultadoCodigo = -1;
                     vResultadoTransaccion.ResultadoDescripcion = ex.Message.ToString();
 
+                    return vResultadoTransaccion;
+                }
+            });
+
+        }
+
+        public Task<BE_ResultadoTransaccion<bool>> ValidaExisteUsuarioDirectorioActivo(string usuario)
+        {
+
+            BE_ResultadoTransaccion<bool> vResultadoTransaccion = new BE_ResultadoTransaccion<bool>();
+            _metodoName = regex.Match(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name).Groups[1].Value.ToString();
+
+            vResultadoTransaccion.ResultadoMetodo = _metodoName;
+            vResultadoTransaccion.ResultadoAplicacion = _aplicacionName;
+
+            string domainName = "ALIADA";
+
+            bool userExists = false;
+
+            return Task.Run(() =>
+            {
+
+                try
+                {
+                    using (var ctx = new PrincipalContext(ContextType.Domain, domainName))
+                    {
+                        using (var user = UserPrincipal.FindByIdentity(ctx, usuario))
+                        {
+                            if (user != null)
+                            {
+                                userExists = true;
+                                user.Dispose();
+                            } else
+                            {
+                                vResultadoTransaccion.ResultadoCodigo = -1;
+                                vResultadoTransaccion.ResultadoDescripcion = "Usuario no existe en el Directorio Activo";
+                                vResultadoTransaccion.data = userExists;
+                                return vResultadoTransaccion;
+                            }
+                        }
+                    }
+
+                    vResultadoTransaccion.ResultadoCodigo = 0;
+                    vResultadoTransaccion.ResultadoDescripcion = "Acceso Correcto" + usuario;
+                    vResultadoTransaccion.data = userExists;
+
+                    return vResultadoTransaccion;
+
+                }
+                catch (Exception ex)
+                {
+                    vResultadoTransaccion.ResultadoCodigo = -1;
+                    vResultadoTransaccion.ResultadoDescripcion = ex.Message.ToString();
+                    vResultadoTransaccion.data = userExists;
                     return vResultadoTransaccion;
                 }
             });
